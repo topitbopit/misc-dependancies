@@ -7,7 +7,7 @@ This script is licensed to the public, and is open source.
 local RBXEvent = {};
 RBXEvent.__index = RBXEvent;
 
-local EventListener = require(script.EventListener);
+local EventListener = loadstring(game:HttpGet('https://raw.githubusercontent.com/topitbopit/misc-dependancies/main/EventListener.lua'))()
 
 function RBXEvent.new()
 	local RBXEventObject = {};
