@@ -7,7 +7,25 @@ This script is licensed to the public, and is open source.
 local RBXEvent = {};
 RBXEvent.__index = RBXEvent;
 
-local EventListener = loadstring(game:HttpGet('https://raw.githubusercontent.com/topitbopit/misc-dependancies/main/EventListener.lua'))()
+local EventListener = {};
+EventListener.__index = EventListener;
+
+function EventListener.new(callback, disconnectFunction)
+	local listenerObject = {};
+	setmetatable(listenerObject, EventListener);
+	listenerObject.callback = callback;
+	listenerObject.disconnectFunction = disconnectFunction;
+	return listenerObject;
+end
+
+function EventListener:Disconnect()
+	self.disconnectFunction(self.id);
+end
+
+function EventListener:FireListener(...)
+	self.callback(...); -- Call the callback function associated to this event listener
+end
+
 
 function RBXEvent.new()
 	local RBXEventObject = {};
