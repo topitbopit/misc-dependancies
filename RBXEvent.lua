@@ -7,29 +7,34 @@ This script is licensed to the public, and is open source.
 local RBXEvent = {};
 RBXEvent.__index = RBXEvent;
 
-local EventListener = {};
-EventListener.__index = EventListener;
-
-function EventListener.new(callback, disconnectFunction)
-	local listenerObject = {};
-	setmetatable(listenerObject, EventListener);
-	listenerObject.callback = callback;
-	listenerObject.disconnectFunction = disconnectFunction;
-	return listenerObject;
+local EventListener = {} do
+    EventListener.__index = EventListener;
+    
+    function EventListener.new(callback, disconnectFunction)
+    	local listenerObject = {};
+    	setmetatable(listenerObject, EventListener);
+    	listenerObject.callback = callback;
+    	listenerObject.disconnectFunction = disconnectFunction;
+    	return listenerObject;
+    end
+    
+    function EventListener:Disconnect()
+    	self.disconnectFunction(self.id);
+    end
+    
+    function EventListener:FireListener(...)
+    	coroutine.resume(coroutine.create(function(...)
+    		self.callback(...); -- Call the callback function associated to this event listener
+    	end), ...);
+    end
 end
 
-function EventListener:Disconnect()
-	self.disconnectFunction(self.id);
-end
-
-function EventListener:FireListener(...)
-	self.callback(...); -- Call the callback function associated to this event listener
-end
 
 
 function RBXEvent.new()
 	local RBXEventObject = {};
 	setmetatable(RBXEventObject, RBXEvent);
+	RBXEventObject.active = true;
 	RBXEventObject.observers = {};
 	return RBXEventObject;
 end;
@@ -55,6 +60,26 @@ function RBXEvent:Connect(callback)
 	listener.id = #self.observers + 1;
 	table.insert(self.observers, listener);
 	return listener;
+end
+
+function RBXEvent:Wait()
+	local thread = coroutine.running();
+	
+	local connection;
+	connection = self:Connect(function(...)
+		connection:Disconnect();
+		coroutine.resume(thread, ...);
+	end)
+	
+	return coroutine.yield();
+end
+
+function RBXEvent:Destroy()
+	for _,observer in pairs(self.observers) do
+		observer:Disconnect();
+	end
+	self.observers = {};
+	self.active = false;
 end
 
 return RBXEvent;
